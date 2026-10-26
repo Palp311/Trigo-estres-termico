@@ -216,7 +216,9 @@ distribution_plot <- ggplot(
         plot.title = element_text(face = "bold"))
 
 relationship_plot <- ggplot(
-  integrated, aes(x = A_net, y = Prolina, color = genotipo)
+  integrated %>%
+    mutate(tratamiento = factor(tratamiento, levels = c("Control", "Calor"))),
+  aes(x = A_net, y = Prolina, color = genotipo)
 ) +
   geom_point(size = 2.4, alpha = 0.85) +
   facet_wrap(~ tratamiento) +
@@ -236,6 +238,14 @@ relationship_plot <- ggplot(
   theme(legend.position = "bottom", panel.grid.minor = element_blank(),
         plot.title = element_text(face = "bold"))
 
+ggsave(file.path(figure_dir, "eda_multicapa.pdf"), distribution_plot,
+       width = 11, height = 4.8, units = "in", device = grDevices::pdf,
+       timestamp = FALSE)
+ggsave(file.path(figure_dir, "eda_relacion_capas.pdf"), relationship_plot,
+       width = 8, height = 4.8, units = "in", device = grDevices::pdf,
+       timestamp = FALSE)
+
+# Copias PNG para mostrarlas en el README (GitHub no muestra PDF inline)
 ggsave(file.path(figure_dir, "eda_multicapa.png"), distribution_plot,
        width = 11, height = 4.8, units = "in", dpi = 200)
 ggsave(file.path(figure_dir, "eda_relacion_capas.png"), relationship_plot,
