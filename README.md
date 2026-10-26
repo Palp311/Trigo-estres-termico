@@ -36,6 +36,16 @@ Versiones usadas: R 4.6.1, dplyr 1.2.1, tidyr 1.3.2, readr 2.2.0, ggplot2 4.0.3.
 
 El análisis es descriptivo: resúmenes por tratamiento y genotipo, cambio porcentual frente a control y correlaciones de Spearman dentro de cada tratamiento. La interpretación está en `reports/eda_detallado.md`.
 
+## Figuras
+
+![Fotosíntesis neta, potasio y prolina por genotipo bajo control y calor](figures/eda_multicapa.png)
+
+*Bajo calor cae la fotosíntesis neta y el potasio, y sube la prolina; G1 y G3 sostienen mejor la fotosíntesis. n = 4 muestras por genotipo y tratamiento (datos simulados).*
+
+![Relación entre fotosíntesis neta y prolina, por tratamiento](figures/eda_relacion_capas.png)
+
+*Relación exploratoria entre fisiología y metabolómica dentro de cada tratamiento (n = 20 por panel; la asociación no implica causalidad).*
+
 ## Estructura
 
 ```text
