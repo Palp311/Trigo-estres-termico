@@ -4,6 +4,8 @@
 
 Proyecto final del curso. Explora cómo responden la fisiología, la ionómica y la metabolómica del trigo duro al calor, y si los genotipos responden de forma distinta.
 
+📄 **Informe borrador (storytelling):** [ver en línea](https://palp311.github.io/Trigo-estres-termico/reports/informe_borrador.html) · [código fuente](reports/informe_borrador.qmd)
+
 ## Preguntas exploratorias
 
 1. ¿Cómo cambian la fisiología, la ionómica y la metabolómica bajo calor frente a control?
@@ -29,6 +31,12 @@ source("scripts/01_eda.R")
 ```
 
 El script valida que las tres tablas coincidan, las integra en `data/processed/` y guarda los resúmenes en `reports/eda_*.csv` y las figuras en `figures/`.
+
+Después, renderiza el informe (requiere Quarto):
+
+```bash
+quarto render reports/informe_borrador.qmd
+```
 
 Versiones usadas: R 4.6.1, dplyr 1.2.1, tidyr 1.3.2, readr 2.2.0, ggplot2 4.0.3.
 
