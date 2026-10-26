@@ -1,0 +1,167 @@
+---
+title: "Algunos genotipos de trigo duro sostienen su fotosíntesis bajo calor"
+subtitle: "Borrador con storytelling — datos simulados"
+author: "Paul López"
+date: today
+lang: es
+format:
+  html:
+    toc: true
+    embed-resources: true
+    fig-width: 7
+    fig-height: 4
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: preparacion
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(readr)
+})
+
+# Generado por scripts/01_eda.R (ejecutarlo antes de renderizar)
+datos <- read_csv("../data/processed/dataset_integrado_simulado.csv",
+                  show_col_types = FALSE) %>%
+  mutate(tratamiento = factor(tratamiento, levels = c("Control", "Calor")))
+
+colores_trat <- c(Control = "#0072B2", Calor = "#D55E00")
+tema <- theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot",
+        legend.position = "top")
+
+cambio <- function(var) {
+  medias <- tapply(datos[[var]], datos$tratamiento, mean)
+  100 * (medias[["Calor"]] - medias[["Control"]]) / medias[["Control"]]
+}
+fmt <- function(x, d = 1) format(round(x, d), decimal.mark = ",", nsmall = d)
+
+por_genotipo <- datos %>%
+  group_by(genotipo, tratamiento) %>%
+  summarise(A_net = mean(A_net), .groups = "drop")
+calor_gen <- filter(por_genotipo, tratamiento == "Calor")
+
+calor <- filter(datos, tratamiento == "Calor")
+rho_k <- cor(calor$A_net, calor$K_mg_g, method = "spearman")
+```
+
+::: {.callout-warning}
+**Todos los datos son simulados.** Están inspirados en una tesis sobre trigo duro (*Triticum durum*) bajo calor en antesis, pero no son mediciones reales ni resultados de esa tesis. El análisis es descriptivo.
+:::
+
+## El calor en floración amenaza al trigo duro
+
+Las olas de calor durante la antesis reducen la fotosíntesis y el rendimiento del trigo. Si algunos genotipos toleran mejor el calor, se pueden priorizar en mejoramiento.
+
+**Pregunta:** ¿todos los genotipos sufren igual bajo calor, o algunos sostienen su fotosíntesis? ¿Qué cambia en sus nutrientes y metabolitos?
+
+**Diseño:** `r nrow(datos)` muestras = 5 genotipos (G1–G5) × 2 tratamientos (Control, Calor) × 4 bloques. Por cada muestra hay tres capas de datos: fisiología, ionómica y metabolómica.
+
+## El calor reduce la fotosíntesis neta un `r fmt(abs(cambio("A_net")))` %
+
+```{r}
+#| label: fig-anet
+#| fig-cap: "Fotosíntesis neta por tratamiento. Cada punto es una muestra (n = 20 por tratamiento); la barra negra es la media."
+ggplot(datos, aes(tratamiento, A_net, color = tratamiento)) +
+  geom_jitter(width = 0.12, size = 2.4, alpha = 0.8, seed = 42) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.45,
+               color = "black", linewidth = 0.4) +
+  scale_color_manual(values = colores_trat, guide = "none") +
+  labs(title = "Bajo calor la fotosíntesis cae, pero las muestras se separan en dos grupos",
+       x = NULL, y = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1))) +
+  tema
+```
+
+La media pasa de `r fmt(mean(datos$A_net[datos$tratamiento == "Control"]))` a `r fmt(mean(datos$A_net[datos$tratamiento == "Calor"]))` µmol CO₂ m⁻² s⁻¹. Pero la nube de puntos bajo calor se ve partida en dos grupos: eso sugiere que los genotipos no responden igual.
+
+## G1 y G3 sostienen casi el doble de fotosíntesis que el resto
+
+```{r}
+#| label: fig-genotipos
+#| fig-cap: "Media de fotosíntesis neta por genotipo en control y calor (n = 4 por combinación). Las líneas unen el mismo genotipo."
+destacados <- c("G1", "G3")
+ggplot(por_genotipo,
+       aes(A_net, reorder(genotipo, A_net * (tratamiento == "Calor")))) +
+  geom_line(aes(group = genotipo,
+                alpha = genotipo %in% destacados), linewidth = 1.2,
+            color = "grey50") +
+  geom_point(aes(color = tratamiento), size = 3.5) +
+  scale_color_manual(values = colores_trat) +
+  scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.35), guide = "none") +
+  labs(title = "G1 y G3 pierden mucha menos fotosíntesis bajo calor",
+       x = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)), y = "Genotipo",
+       color = NULL) +
+  tema
+```
+
+Bajo calor, G1 y G3 mantienen `r fmt(min(calor_gen$A_net[calor_gen$genotipo %in% destacados]))`–`r fmt(max(calor_gen$A_net[calor_gen$genotipo %in% destacados]))` µmol CO₂ m⁻² s⁻¹, mientras que G2, G4 y G5 caen a `r fmt(min(calor_gen$A_net[!calor_gen$genotipo %in% destacados]))`–`r fmt(max(calor_gen$A_net[!calor_gen$genotipo %in% destacados]))`. En control los cinco genotipos estaban más próximos.
+
+## El potasio baja un `r fmt(abs(cambio("K_mg_g")))` % y la prolina sube un `r fmt(cambio("Prolina"))` %
+
+```{r}
+#| label: fig-k-prolina
+#| fig-cap: "Potasio y prolina por genotipo y tratamiento. Cada punto es una muestra (n = 4 por combinación)."
+#| fig-height: 4.5
+datos %>%
+  select(genotipo, tratamiento, K_mg_g, Prolina) %>%
+  pivot_longer(c(K_mg_g, Prolina), names_to = "variable") %>%
+  mutate(variable = recode(variable,
+                           K_mg_g = "Potasio (mg/g)",
+                           Prolina = "Prolina (abundancia relativa, AU)")) %>%
+  ggplot(aes(genotipo, value, color = tratamiento)) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.1,
+                                             dodge.width = 0.6, seed = 42),
+             size = 2, alpha = 0.85) +
+  facet_wrap(~ variable, scales = "free_y") +
+  scale_color_manual(values = colores_trat) +
+  labs(title = "Bajo calor baja el potasio y sube la prolina",
+       subtitle = "G1 y G3 conservan más potasio y acumulan menos prolina que el resto",
+       x = "Genotipo", y = NULL, color = NULL) +
+  tema
+```
+
+La prolina es un osmoprotector que se acumula con el estrés. El potasio regula la apertura de los estomas. G1 y G3 conservan más potasio y acumulan menos prolina, como si sufrieran menos estrés. Eso encaja con que sostengan más fotosíntesis y lleva a la siguiente pregunta.
+
+## Bajo calor, las muestras con más potasio tienen más fotosíntesis
+
+```{r}
+#| label: fig-anet-k
+#| fig-cap: "Fotosíntesis neta frente a potasio en las muestras bajo calor (n = 20). Color por genotipo."
+ggplot(calor, aes(K_mg_g, A_net, color = genotipo)) +
+  geom_point(size = 2.8, alpha = 0.9) +
+  scale_color_manual(values = c(G1 = "#0072B2", G2 = "#D55E00", G3 = "#009E73",
+                                G4 = "#CC79A7", G5 = "#E69F00")) +
+  annotate("label", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3,
+           label = paste0("Spearman ρ = ", fmt(rho_k, 2), " (n = ", nrow(calor), ")")) +
+  labs(title = "Más potasio acompaña a más fotosíntesis bajo calor",
+       x = "Potasio (mg/g)",
+       y = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)),
+       color = "Genotipo") +
+  tema
+```
+
+La asociación es moderada (ρ = `r fmt(rho_k, 2)`) y en buena parte refleja la diferencia entre genotipos: G1 y G3 aparecen arriba a la derecha. No permite afirmar que el potasio *cause* la fotosíntesis más alta.
+
+## Mensaje final: hay genotipos más tolerantes, y el potasio es una pista
+
+- El calor reduce la fotosíntesis neta (−`r fmt(abs(cambio("A_net")))` %) y el potasio (−`r fmt(abs(cambio("K_mg_g")))` %), y aumenta la prolina (+`r fmt(cambio("Prolina"))` %).
+- **G1 y G3** sostienen casi el doble de fotosíntesis que el resto bajo calor. Son candidatos a estudiar.
+- La relación entre potasio y fotosíntesis sugiere una hipótesis para probar en un experimento: que el mantenimiento del potasio contribuya a la tolerancia.
+
+### Limitaciones
+
+- **Datos simulados:** sirven para practicar el análisis, no para sacar conclusiones agronómicas.
+- **Análisis descriptivo:** no hay pruebas de hipótesis ni modelos que consideren el bloque.
+- **n pequeño:** 4 muestras por genotipo y tratamiento.
+- **Correlación ≠ causalidad:** la asociación entre potasio y fotosíntesis puede deberse al genotipo.
+
+### Próximos pasos
+
+Ajustar un modelo mixto (tratamiento × genotipo, con bloque como efecto aleatorio) y hacer un PCA de las tres capas para ver si G1 y G3 se separan también en el perfil metabólico.
