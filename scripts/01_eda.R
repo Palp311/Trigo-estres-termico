@@ -236,10 +236,8 @@ relationship_plot <- ggplot(
   theme(legend.position = "bottom", panel.grid.minor = element_blank(),
         plot.title = element_text(face = "bold"))
 
-ggsave(file.path(figure_dir, "eda_multicapa.pdf"), distribution_plot,
-       width = 11, height = 4.8, units = "in", device = grDevices::pdf,
-       timestamp = FALSE)
-ggsave(file.path(figure_dir, "eda_relacion_capas.pdf"), relationship_plot,
-       width = 8, height = 4.8, units = "in", device = grDevices::pdf,
-       timestamp = FALSE)
-cat("Figures saved to figures/eda_multicapa.pdf and figures/eda_relacion_capas.pdf\n")
+ggsave(file.path(figure_dir, "eda_multicapa.png"), distribution_plot,
+       width = 11, height = 4.8, units = "in", dpi = 200)
+ggsave(file.path(figure_dir, "eda_relacion_capas.png"), relationship_plot,
+       width = 8, height = 4.8, units = "in", dpi = 200)
+cat("Figuras guardadas en figures/ (PDF y PNG)\n")
