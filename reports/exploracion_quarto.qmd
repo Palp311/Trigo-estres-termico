@@ -1,0 +1,381 @@
+---
+title: "Exploración de Quarto: informe de trigo duro bajo calor en tres formatos"
+subtitle: "Exploración libre de Quarto — datos simulados"
+author: "Paul López"
+date: today
+lang: es
+bibliography: referencias.bib
+format:
+  html:
+    toc: true
+    code-fold: show
+    embed-resources: true
+    fig-width: 7
+    fig-height: 4
+  pdf:
+    fig-format: png
+    fig-dpi: 200
+    toc: true
+    echo: false
+    fig-width: 6.5
+    fig-height: 3.8
+  docx:
+    toc: true
+    echo: false
+    fig-width: 6.5
+    fig-height: 3.8
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: preparacion
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+library(here)
+library(knitr)
+library(emmeans)
+
+here::i_am("reports/exploracion_quarto.qmd")
+
+datos <- read_csv(here("data", "processed", "dataset_integrado_simulado.csv"),
+                  show_col_types = FALSE) %>%
+  mutate(tratamiento = factor(tratamiento, levels = c("Control", "Calor")))
+
+colores_trat <- c(Control = "#0072B2", Calor = "#D55E00")
+fuente <- "Datos simulados — proyecto Trigo-estres-termico"
+tema <- theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot",
+        legend.position = "top")
+
+cambio <- function(var) {
+  medias <- tapply(datos[[var]], datos$tratamiento, mean)
+  100 * (medias[["Calor"]] - medias[["Control"]]) / medias[["Control"]]
+}
+fmt <- function(x, d = 1) format(round(x, d), decimal.mark = ",", nsmall = d)
+
+guardar <- function(grafico, nombre, ancho = 8, alto = 5) {
+  ggsave(here("figures", paste0("quarto_", nombre)), grafico,
+         width = ancho, height = alto, dpi = 300)
+}
+
+por_genotipo <- datos %>%
+  group_by(genotipo, tratamiento) %>%
+  summarise(A_net = mean(A_net), .groups = "drop")
+calor_gen <- filter(por_genotipo, tratamiento == "Calor")
+
+calor <- filter(datos, tratamiento == "Calor")
+rho_k <- cor(calor$A_net, calor$K_mg_g, method = "spearman")
+```
+
+```{r}
+#| label: generar-bib
+#| include: false
+# la bibliografía se genera desde los paquetes instalados, no a mano
+knitr::write_bib(c("emmeans", "multcomp", "ggplot2", "dplyr"),
+                 file = here("reports", "referencias.bib"))
+```
+
+::: {.callout-warning}
+**Todos los datos son simulados.** Están inspirados en una tesis sobre trigo duro (*Triticum durum*) bajo calor en antesis, pero no son mediciones reales ni resultados de esa tesis.
+:::
+
+## Qué se explora de Quarto en este informe
+
+Este documento parte del [informe borrador](informe_borrador.html) y lo reescribe con funciones nuevas de Quarto. Cada una se justifica en el lugar donde se usa:
+
+- **Multiformato:** un solo `.qmd` produce HTML, PDF y Word, para compartir el mismo informe con quien prefiera cada formato. El código se muestra (plegable) solo en HTML.
+- **Referencias cruzadas** (`@fig-...`, `@tbl-...`): evitan numerar a mano y se actualizan solas si cambia el orden.
+- **Pestañas, columnas, callouts, notas al pie y bibliografía:** ordenan el contenido y lo hacen citable.
+
+## El calor en floración amenaza al trigo duro
+
+Las olas de calor durante la antesis reducen la fotosíntesis y el rendimiento del trigo. Si algunos genotipos toleran mejor el calor, se pueden priorizar en mejoramiento.
+
+**Pregunta:** ¿todos los genotipos sufren igual bajo calor, o algunos sostienen su fotosíntesis? ¿Qué cambia en sus nutrientes y metabolitos?
+
+**Diseño:** `r nrow(datos)` muestras = 5 genotipos (G1–G5) × 2 tratamientos (Control, Calor) × 4 bloques. Por cada muestra hay tres capas de datos: fisiología, ionómica y metabolómica.^[Los datos se generaron por simulación; no hay procedencia ni licencia externas. Se documenta aquí para cumplir la norma de integridad de datos del curso.]
+
+## El calor reduce la fotosíntesis neta un `r fmt(abs(cambio("A_net")))` %
+
+En la @fig-lado se ven dos cortes de la misma variable; los paneles lado a lado (`layout-ncol`) permiten compararlos sin desplazarse.
+
+::: {#fig-lado layout-ncol=2}
+
+```{r}
+#| label: fig-anet-trat
+#| fig-cap: "Por tratamiento (n = 20 por grupo)."
+p_trat <- ggplot(datos, aes(tratamiento, A_net, color = tratamiento)) +
+  geom_jitter(width = 0.12, size = 2.2, alpha = 0.8) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.45,
+               color = "black", linewidth = 0.4) +
+  scale_color_manual(values = colores_trat, guide = "none") +
+  labs(title = "Bajo calor la fotosíntesis cae",
+       x = NULL, y = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)),
+       caption = fuente) +
+  tema
+guardar(p_trat, "anet_tratamiento.png")
+p_trat
+```
+
+```{r}
+#| label: fig-anet-gen
+#| fig-cap: "Por genotipo y tratamiento (n = 4 por combinación)."
+p_gen <- ggplot(datos, aes(genotipo, A_net, color = tratamiento)) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.1,
+                                             dodge.width = 0.6, seed = 42),
+             size = 2, alpha = 0.85) +
+  scale_color_manual(values = colores_trat) +
+  labs(title = "G1 y G3 resisten mejor",
+       x = "Genotipo", y = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)),
+       color = NULL, caption = fuente) +
+  tema
+guardar(p_gen, "anet_genotipo.png")
+p_gen
+```
+
+Fotosíntesis neta ($A_{net}$) por tratamiento y por genotipo.
+:::
+
+La media pasa de `r fmt(mean(datos$A_net[datos$tratamiento == "Control"]))` a `r fmt(mean(datos$A_net[datos$tratamiento == "Calor"]))` µmol CO~2~ m^-2^ s^-1^. Pero la nube de puntos bajo calor se ve partida en dos grupos: eso sugiere que los genotipos no responden igual.
+
+## G1 y G3 sostienen casi el doble de fotosíntesis que el resto
+
+```{r}
+#| label: fig-genotipos
+#| fig-cap: "Media de fotosíntesis neta por genotipo en control y calor (n = 4 por combinación). Las líneas unen el mismo genotipo."
+destacados <- c("G1", "G3")
+p_gen_media <- ggplot(por_genotipo,
+       aes(A_net, reorder(genotipo, A_net * (tratamiento == "Calor")))) +
+  geom_line(aes(group = genotipo,
+                alpha = genotipo %in% destacados), linewidth = 1.2,
+            color = "grey50") +
+  geom_point(aes(color = tratamiento), size = 3.5) +
+  scale_color_manual(values = colores_trat) +
+  scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.35), guide = "none") +
+  labs(title = "G1 y G3 pierden mucha menos fotosíntesis bajo calor",
+       x = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)), y = "Genotipo",
+       color = NULL, caption = fuente) +
+  tema
+guardar(p_gen_media, "genotipos_media.png")
+p_gen_media
+```
+
+Bajo calor, G1 y G3 mantienen `r fmt(min(calor_gen$A_net[calor_gen$genotipo %in% destacados]))`–`r fmt(max(calor_gen$A_net[calor_gen$genotipo %in% destacados]))` µmol CO~2~ m^-2^ s^-1^, mientras que G2, G4 y G5 caen a `r fmt(min(calor_gen$A_net[!calor_gen$genotipo %in% destacados]))`–`r fmt(max(calor_gen$A_net[!calor_gen$genotipo %in% destacados]))`. En control los cinco genotipos estaban más próximos.
+
+## El potasio baja un `r fmt(abs(cambio("K_mg_g")))` % y la prolina sube un `r fmt(cambio("Prolina"))` %
+
+```{r}
+#| label: fig-k-prolina
+#| fig-cap: "Potasio y prolina por genotipo y tratamiento. Cada punto es una muestra (n = 4 por combinación)."
+#| fig-height: 4.5
+p_k_prolina <- datos %>%
+  select(genotipo, tratamiento, K_mg_g, Prolina) %>%
+  pivot_longer(c(K_mg_g, Prolina), names_to = "variable") %>%
+  mutate(variable = recode(variable,
+                           K_mg_g = "Potasio (mg/g)",
+                           Prolina = "Prolina (abundancia relativa, AU)")) %>%
+  ggplot(aes(genotipo, value, color = tratamiento)) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.1,
+                                             dodge.width = 0.6, seed = 42),
+             size = 2, alpha = 0.85) +
+  facet_wrap(~ variable, scales = "free_y") +
+  scale_color_manual(values = colores_trat) +
+  labs(title = "Bajo calor baja el potasio y sube la prolina",
+       subtitle = "G1 y G3 conservan más potasio y acumulan menos prolina que el resto",
+       x = "Genotipo", y = NULL, color = NULL, caption = fuente) +
+  tema
+guardar(p_k_prolina, "k_prolina.png")
+p_k_prolina
+```
+
+La prolina es un osmoprotector que se acumula con el estrés. El potasio regula la apertura de los estomas. G1 y G3 conservan más potasio y acumulan menos prolina, como si sufrieran menos estrés.
+
+## Cambio por capa de datos
+
+Para ver el panorama completo, las pestañas siguientes muestran el cambio porcentual de cada variable (media de Calor frente a media de Control) en una capa por pestaña. Las pestañas evitan una página larga de tablas en HTML; en PDF y Word se muestran una tras otra. Las tablas son @tbl-fisiologia, @tbl-ionomica y @tbl-metabolomica.
+
+```{r}
+#| label: funcion-tabla-cambio
+tabla_cambio <- function(variables) {
+  datos %>%
+    select(tratamiento, all_of(variables)) %>%
+    pivot_longer(-tratamiento, names_to = "variable") %>%
+    group_by(variable, tratamiento) %>%
+    summarise(media = mean(value), .groups = "drop") %>%
+    pivot_wider(names_from = tratamiento, values_from = media) %>%
+    mutate(`Cambio (%)` = 100 * (Calor - Control) / Control) %>%
+    rename(Variable = variable, `Media Control` = Control, `Media Calor` = Calor) %>%
+    arrange(match(Variable, variables))
+}
+```
+
+::: {.panel-tabset}
+
+### Fisiología
+
+```{r}
+#| label: tbl-fisiologia
+#| tbl-cap: "Cambio porcentual Calor frente a Control en variables fisiológicas (A_net, gs, Ci, E en unidades de intercambio gaseoso; Fv/Fm adimensional; SPAD en unidades SPAD; CTD en °C)."
+tabla_cambio(c("A_net", "gs", "Ci", "E", "Fv_Fm", "SPAD", "CTD")) %>%
+  kable(digits = 2, format.args = list(decimal.mark = ","))
+```
+
+### Ionómica
+
+```{r}
+#| label: tbl-ionomica
+#| tbl-cap: "Cambio porcentual Calor frente a Control en nutrientes (macro en mg/g; Fe, Zn y Mn en µg/g)."
+tabla_cambio(c("K_mg_g", "Na_mg_g", "Ca_mg_g", "Mg_mg_g", "P_mg_g",
+               "Fe_ug_g", "Zn_ug_g", "Mn_ug_g")) %>%
+  kable(digits = 2, format.args = list(decimal.mark = ","))
+```
+
+### Metabolómica
+
+```{r}
+#| label: tbl-metabolomica
+#| tbl-cap: "Cambio porcentual Calor frente a Control en metabolitos (abundancia relativa, AU)."
+tabla_cambio(c("Glucosa", "Fructosa", "Sacarosa", "Rafinosa", "Prolina",
+               "GABA", "Malato", "Citrato")) %>%
+  kable(digits = 2, format.args = list(decimal.mark = ","))
+```
+
+:::
+
+## Bajo calor, las muestras con más potasio tienen más fotosíntesis
+
+```{r}
+#| label: fig-anet-k
+#| fig-cap: "Fotosíntesis neta frente a potasio en las muestras bajo calor (n = 20). Color por genotipo."
+p_anet_k <- ggplot(calor, aes(K_mg_g, A_net, color = genotipo)) +
+  geom_point(size = 2.8, alpha = 0.9) +
+  scale_color_manual(values = c(G1 = "#0072B2", G2 = "#D55E00", G3 = "#009E73",
+                                G4 = "#CC79A7", G5 = "#E69F00")) +
+  annotate("label", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3,
+           label = paste0("Spearman rho = ", fmt(rho_k, 2), " (n = ", nrow(calor), ")")) +
+  labs(title = "Más potasio acompaña a más fotosíntesis bajo calor",
+       x = "Potasio (mg/g)",
+       y = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)),
+       color = "Genotipo", caption = fuente) +
+  tema
+guardar(p_anet_k, "anet_potasio.png")
+p_anet_k
+```
+
+La asociación es moderada (rho de Spearman = `r fmt(rho_k, 2)`) y en buena parte refleja la diferencia entre genotipos: G1 y G3 aparecen arriba a la derecha. No permite afirmar que el potasio *cause* la fotosíntesis más alta.
+
+## Un modelo con bloque como efecto fijo
+
+Esta sección se inspira en el capítulo "2w RCBD" del sitio DSFAIR de Paul Schmidt (<https://schmidtpaul.github.io/dsfair_quarto/ch/exan/simple/rcbd_gomezgomez1984.html>), un sitio hecho con Quarto. Se ajusta un diseño de bloques completos al azar con dos factores y se comparan genotipos dentro de cada tratamiento con medias marginales estimadas [@R-emmeans] y letras de grupos compartidos [@R-multcomp]. La figura usa @R-ggplot2 y la manipulación de datos @R-dplyr.
+
+```{r}
+#| label: modelo
+modelo_anet <- lm(A_net ~ tratamiento * genotipo + bloque, data = datos)
+
+tabla_anova <- car::Anova(modelo_anet, type = "III")
+p_interaccion <- tabla_anova["tratamiento:genotipo", "Pr(>F)"]
+```
+
+El valor p de la interacción tratamiento × genotipo es `r sub(".", ",", format.pval(p_interaccion, digits = 3, eps = 0.001), fixed = TRUE)` (@tbl-anova): `r if (p_interaccion < 0.05) "hay evidencia de que los genotipos responden de forma distinta al calor" else "no hay evidencia clara de que los genotipos respondan distinto al calor"`.
+
+```{r}
+#| label: tbl-anova
+#| tbl-cap: "ANOVA tipo III de A_net (µmol CO2 m-2 s-1) con tratamiento × genotipo + bloque."
+tabla_anova %>%
+  as.data.frame() %>%
+  mutate(`Pr(>F)` = case_when(is.na(`Pr(>F)`) ~ "",
+                              `Pr(>F)` < 0.001 ~ "<0,001",
+                              TRUE ~ format(round(`Pr(>F)`, 3), decimal.mark = ",", nsmall = 3)),
+         `F value` = ifelse(is.na(`F value`), "", fmt(`F value`, 2))) %>%
+  kable(digits = 3, format.args = list(decimal.mark = ","), align = "r")
+```
+
+::: {.callout-note collapse="true"}
+## ¿Se cumplen los supuestos?
+
+El diagnóstico se hace sobre los residuos del modelo: normalidad (Shapiro-Wilk) y homogeneidad de varianzas (Levene, paquete `car`). Un callout colapsable mantiene el detalle técnico a mano sin interrumpir la lectura.
+
+```{r}
+#| label: supuestos
+shapiro_res <- shapiro.test(resid(modelo_anet))
+levene_res <- car::leveneTest(A_net ~ tratamiento * genotipo, data = datos)
+p_levene <- levene_res[["Pr(>F)"]][1]
+```
+
+- Shapiro-Wilk de los residuos: W = `r fmt(unname(shapiro_res$statistic), 3)`, p = `r fmt(shapiro_res$p.value, 3)`.
+- Levene entre las 10 combinaciones tratamiento × genotipo: p = `r fmt(p_levene, 3)`.
+- Con p > 0,05 en ambas pruebas no hay indicios claros de incumplimiento; con n = 4 por combinación la potencia de estas pruebas es baja.
+:::
+
+```{r}
+#| label: emmeans
+em_genotipo <- emmeans(modelo_anet, ~ genotipo | tratamiento)
+cld_genotipo <- multcomp::cld(em_genotipo, adjust = "sidak", Letters = letters) %>%
+  as.data.frame() %>%
+  mutate(grupo = trimws(.group))
+
+maximos <- datos %>%
+  group_by(genotipo, tratamiento) %>%
+  summarise(maximo = max(A_net), .groups = "drop")
+
+cld_genotipo <- left_join(cld_genotipo, maximos, by = c("genotipo", "tratamiento"))
+```
+
+```{r}
+#| label: fig-modelo
+#| fig-cap: "Fotosíntesis neta por genotipo dentro de cada tratamiento. Puntos grises: muestras; puntos de color: media estimada con IC 95 %. Letras iguales dentro de un panel indican genotipos sin diferencia (comparaciones por pares con ajuste de Sidak, alfa = 0,05)."
+p_modelo <- ggplot() +
+  geom_jitter(data = datos, aes(genotipo, A_net),
+              width = 0.12, alpha = 0.35, color = "grey40") +
+  geom_pointrange(data = cld_genotipo,
+                  aes(genotipo, emmean, ymin = lower.CL, ymax = upper.CL,
+                      color = tratamiento), linewidth = 0.8) +
+  geom_text(data = cld_genotipo, aes(genotipo, pmax(maximo, upper.CL), label = grupo),
+            vjust = -0.8, fontface = "bold") +
+  facet_wrap(~ tratamiento) +
+  scale_color_manual(values = colores_trat, guide = "none") +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
+  labs(title = "Diferencias entre genotipos de A_net dentro de cada tratamiento",
+       x = "Genotipo", y = expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1)),
+       caption = fuente) +
+  tema
+guardar(p_modelo, "modelo_emmeans.png")
+p_modelo
+```
+
+## Mensaje final: hay genotipos más tolerantes, y el potasio es una pista
+
+- El calor reduce la fotosíntesis neta (−`r fmt(abs(cambio("A_net")))` %) y el potasio (−`r fmt(abs(cambio("K_mg_g")))` %), y aumenta la prolina (+`r fmt(cambio("Prolina"))` %).
+- **G1 y G3** sostienen casi el doble de fotosíntesis que el resto bajo calor. Son candidatos a estudiar.
+- La relación entre potasio y fotosíntesis sugiere una hipótesis para probar en un experimento: que el mantenimiento del potasio contribuya a la tolerancia.
+
+### Limitaciones
+
+- **Datos simulados:** sirven para practicar el análisis, no para sacar conclusiones agronómicas.
+- **Modelo simple:** el modelo de A_net incluye el bloque como efecto fijo, pero solo cubre una variable; el resto del análisis sigue siendo descriptivo.
+- **n pequeño:** 4 muestras por genotipo y tratamiento, lo que limita la potencia de los diagnósticos y de las comparaciones.
+- **Correlación no es causalidad:** la asociación entre potasio y fotosíntesis puede deberse al genotipo.
+
+### Próximos pasos
+
+Ajustar un modelo mixto (tratamiento × genotipo, con bloque como efecto aleatorio) y hacer un PCA de las tres capas para ver si G1 y G3 se separan también en el perfil metabólico.
+
+## Referencias
+
+::: {#refs}
+:::
+
+## Información de la sesión
+
+```{r}
+#| label: sesion
+#| echo: true
+sessionInfo()
+```

@@ -6,6 +6,8 @@ Proyecto final del curso. Explora cómo responden la fisiología, la ionómica y
 
 📄 **Informe borrador (storytelling):** [ver en línea](https://palp311.github.io/Trigo-estres-termico/reports/informe_borrador.html) · [código fuente](reports/informe_borrador.qmd)
 
+🧪 **Exploración de Quarto (mismo informe en tres formatos + modelo con emmeans):** [HTML](https://palp311.github.io/Trigo-estres-termico/reports/exploracion_quarto.html) · [PDF](reports/exploracion_quarto.pdf) · [Word](reports/exploracion_quarto.docx) · [código fuente](reports/exploracion_quarto.qmd)
+
 ## Preguntas exploratorias
 
 1. ¿Cómo cambian la fisiología, la ionómica y la metabolómica bajo calor frente a control?
@@ -36,6 +38,7 @@ Después, renderiza el informe (requiere Quarto):
 
 ```bash
 quarto render reports/informe_borrador.qmd
+quarto render reports/exploracion_quarto.qmd   # genera HTML, PDF y Word
 ```
 
 Versiones usadas: R 4.6.1, dplyr 1.2.1, tidyr 1.3.2, readr 2.2.0, ggplot2 4.0.3.
