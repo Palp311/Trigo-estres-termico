@@ -26,7 +26,7 @@ Proyecto final del curso. Explora cómo responden la fisiología, la ionómica y
 
 ## Cómo reproducir
 
-Abre `Proyecto_final_trigo.Rproj` y ejecuta desde la raíz:
+Abre `Trigo-estres-termico.Rproj` y ejecuta desde la raíz:
 
 ```r
 source("scripts/01_eda.R")
@@ -57,15 +57,23 @@ El análisis es descriptivo: resúmenes por tratamiento y genotipo, cambio porce
 
 *Relación exploratoria entre fisiología y metabolómica dentro de cada tratamiento (n = 20 por panel; la asociación no implica causalidad).*
 
+## Diccionario de datos
+
+Todas las variables (metadatos, fisiología, ionómica y metabolómica) están descritas, con unidad, tipo y rango esperado, en [`data/diccionario_datos.csv`](data/diccionario_datos.csv).
+
+> **Nota sobre unidades:** al ser datos simulados, las unidades de fisiología (A_net, gs, Ci, E, Fv_Fm, SPAD, CTD) son las convencionales asumidas para este tipo de medidas, no unidades registradas en un instrumento real.
+
 ## Estructura
 
 ```text
 Trigo-estres-termico/
-├── Proyecto_final_trigo.Rproj
+├── Trigo-estres-termico.Rproj
 ├── data/
-│   ├── raw/          # Datos simulados originales (no se modifican)
-│   └── processed/    # Tablas generadas por el script
-├── figures/          # Figuras del EDA
-├── reports/          # Resúmenes, interpretación y actividades semanales
-└── scripts/          # Código en R
+│   ├── raw/                   # Datos simulados originales (no se modifican)
+│   ├── processed/             # Tablas generadas por el script
+│   └── diccionario_datos.csv  # Diccionario de variables
+├── figures/                   # Figuras del EDA
+├── reports/                   # Informes (.qmd), resúmenes eda_*.csv e interpretación
+│   └── actividades/           # Actividades semanales del curso
+└── scripts/                   # Código en R
 ```

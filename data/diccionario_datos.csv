@@ -1,0 +1,29 @@
+variable,capa,descripcion,unidad,tipo,valores_o_rango_esperado
+sample_id,metadatos,Identificador único de la muestra; clave de unión entre las tres capas,sin unidad,caracter,40 valores únicos (uno por muestra)
+bloque,metadatos,Bloque experimental,sin unidad,factor,Bloque_1; Bloque_2; Bloque_3; Bloque_4
+tratamiento,metadatos,Tratamiento térmico aplicado,sin unidad,factor,Control; Calor
+genotipo,metadatos,Genotipo de trigo duro (simulado),sin unidad,factor,G1; G2; G3; G4; G5
+A_net,fisiologia,Tasa neta de asimilación de CO2 (fotosíntesis neta),µmol CO2 m⁻² s⁻¹,numerico,5 a 30
+gs,fisiologia,Conductancia estomática al vapor de agua,mol H2O m⁻² s⁻¹,numerico,0.05 a 0.60
+Ci,fisiologia,Concentración intercelular de CO2,µmol mol⁻¹,numerico,150 a 400
+E,fisiologia,Tasa de transpiración,mmol H2O m⁻² s⁻¹,numerico,0.5 a 8
+Fv_Fm,fisiologia,Rendimiento cuántico máximo del fotosistema II (fluorescencia de la clorofila),adimensional,numerico,0.60 a 0.85
+SPAD,fisiologia,Contenido relativo de clorofila medido con SPAD,unidades SPAD,numerico,20 a 60
+CTD,fisiologia,Depresión de temperatura del dosel (temperatura del aire menos temperatura del dosel),°C,numerico,0 a 8
+K_mg_g,ionomica,Concentración de potasio,mg g⁻¹ de materia seca,numerico,20 a 50
+Na_mg_g,ionomica,Concentración de sodio,mg g⁻¹ de materia seca,numerico,0.5 a 3
+Ca_mg_g,ionomica,Concentración de calcio,mg g⁻¹ de materia seca,numerico,5 a 15
+Mg_mg_g,ionomica,Concentración de magnesio,mg g⁻¹ de materia seca,numerico,2 a 5
+P_mg_g,ionomica,Concentración de fósforo,mg g⁻¹ de materia seca,numerico,2 a 6
+Fe_ug_g,ionomica,Concentración de hierro,µg g⁻¹ de materia seca,numerico,80 a 150
+Zn_ug_g,ionomica,Concentración de zinc,µg g⁻¹ de materia seca,numerico,25 a 60
+Mn_ug_g,ionomica,Concentración de manganeso,µg g⁻¹ de materia seca,numerico,40 a 100
+Glucosa,metabolomica,Abundancia relativa de glucosa,u.a.,numerico,50 a 160
+Fructosa,metabolomica,Abundancia relativa de fructosa,u.a.,numerico,40 a 110
+Sacarosa,metabolomica,Abundancia relativa de sacarosa,u.a.,numerico,40 a 130
+Rafinosa,metabolomica,Abundancia relativa de rafinosa,u.a.,numerico,10 a 70
+Prolina,metabolomica,Abundancia relativa de prolina,u.a.,numerico,20 a 90
+GABA,metabolomica,Abundancia relativa de ácido γ-aminobutírico (GABA),u.a.,numerico,30 a 100
+Malato,metabolomica,Abundancia relativa de malato,u.a.,numerico,30 a 100
+Citrato,metabolomica,Abundancia relativa de citrato,u.a.,numerico,20 a 90
+tipo_dato,metabolomica,Etiqueta que indica el origen de los datos (solo en la tabla de metabolómica),sin unidad,factor,simulado
