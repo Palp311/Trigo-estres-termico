@@ -26,22 +26,25 @@ Proyecto final del curso. Explora cómo responden la fisiología, la ionómica y
 
 ## Cómo reproducir
 
-Abre `Trigo-estres-termico.Rproj` y ejecuta desde la raíz:
+1. Abre `Trigo-estres-termico.Rproj` en RStudio y restaura las dependencias fijadas en `renv.lock`:
 
-```r
-source("scripts/01_eda.R")
-```
+   ```r
+   renv::restore()
+   ```
 
-El script valida que las tres tablas coincidan, las integra en `data/processed/` y guarda los resúmenes en `reports/eda_*.csv` y las figuras en `figures/`.
+2. Ejecuta el análisis desde la consola de R (valida y integra las tres tablas en `data/processed/`, guarda los resúmenes en `reports/eda_*.csv` y las figuras en `figures/`):
 
-Después, renderiza el informe (requiere Quarto):
+   ```r
+   source("scripts/01_eda.R")
+   ```
 
-```bash
-quarto render reports/informe_borrador.qmd
-quarto render reports/exploracion_quarto.qmd   # genera HTML, PDF y Word
-```
+3. Renderiza los informes desde la terminal, en la raíz del proyecto (requiere Quarto; el PDF requiere además una instalación de LaTeX, por ejemplo TinyTeX). `_quarto.yml` indica qué archivos se renderizan y las salidas quedan junto a cada `.qmd`:
 
-Versiones usadas: R 4.6.1, dplyr 1.2.1, tidyr 1.3.2, readr 2.2.0, ggplot2 4.0.3.
+   ```bash
+   quarto render
+   ```
+
+Versiones usadas (fijadas en `renv.lock`): R 4.6.1, Quarto 1.5.57, dplyr 1.2.1, tidyr 1.3.2, readr 2.2.0, ggplot2 4.0.3, here 1.0.2, knitr 1.52, rmarkdown 2.32, emmeans 2.0.4, multcompView 0.1-12.
 
 ## EDA
 
@@ -63,11 +66,23 @@ Todas las variables (metadatos, fisiología, ionómica y metabolómica) están d
 
 > **Nota sobre unidades:** al ser datos simulados, las unidades de fisiología (A_net, gs, Ci, E, Fv_Fm, SPAD, CTD) son las convencionales asumidas para este tipo de medidas, no unidades registradas en un instrumento real.
 
+## Licencia
+
+El texto y los datos simulados de este repositorio se publican bajo la licencia [Creative Commons Atribución 4.0 Internacional (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). Más detalles en [`LICENSE.md`](LICENSE.md).
+
+## Cómo citar
+
+> López, P. (2026). *Trigo duro bajo estrés térmico: exploración de datos simulados*. https://github.com/Palp311/Trigo-estres-termico
+
 ## Estructura
 
 ```text
 Trigo-estres-termico/
 ├── Trigo-estres-termico.Rproj
+├── _quarto.yml                # Proyecto Quarto (qué se renderiza)
+├── renv.lock                  # Versiones de paquetes fijadas
+├── renv/                      # Infraestructura de renv (la biblioteca no se versiona)
+├── LICENSE.md                 # Licencia CC BY 4.0
 ├── data/
 │   ├── raw/                   # Datos simulados originales (no se modifican)
 │   ├── processed/             # Tablas generadas por el script

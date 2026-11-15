@@ -1,5 +1,5 @@
 # Análisis exploratorio de datos simulados de fisiología, ionómica y metabolómica.
-paquetes_requeridos <- c("dplyr", "tidyr", "ggplot2", "readr")
+paquetes_requeridos <- c("dplyr", "tidyr", "ggplot2", "readr", "here")
 paquetes_faltantes <- paquetes_requeridos[
   !vapply(paquetes_requeridos, requireNamespace, logical(1), quietly = TRUE)
 ]
@@ -11,13 +11,14 @@ suppressPackageStartupMessages({
   library(tidyr)
   library(ggplot2)
   library(readr)
+  library(here)
 })
 
 # Rutas y metadatos comunes a las tres capas
-dir_datos <- file.path("data", "raw")
-dir_salida <- file.path("data", "processed")
-dir_figuras <- "figures"
-dir_reportes <- "reports"
+dir_datos <- here("data", "raw")
+dir_salida <- here("data", "processed")
+dir_figuras <- here("figures")
+dir_reportes <- here("reports")
 metadatos <- c("sample_id", "bloque", "tratamiento", "genotipo")
 
 # Lee una capa y valida lectura, metadatos y unicidad de sample_id

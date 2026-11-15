@@ -39,6 +39,7 @@ library(readr)
 library(here)
 library(knitr)
 library(emmeans)
+library(multcompView)  # letras de grupos en cld()
 
 here::i_am("reports/exploracion_quarto.qmd")
 
