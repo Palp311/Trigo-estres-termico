@@ -4,9 +4,9 @@
 
 Proyecto final del curso. Explora cómo responden la fisiología, la ionómica y la metabolómica del trigo duro al calor, y si los genotipos responden de forma distinta.
 
-📄 **Informe borrador (storytelling):** [ver en línea](https://palp311.github.io/Trigo-estres-termico/reports/informe_borrador.html) · [código fuente](reports/informe_borrador.qmd)
+📊 **Informe final:** <https://palp311.github.io/Trigo-estres-termico/> · [código fuente](index.qmd)
 
-🧪 **Exploración de Quarto (mismo informe en tres formatos + modelo con emmeans):** [HTML](https://palp311.github.io/Trigo-estres-termico/reports/exploracion_quarto.html) · [PDF](reports/exploracion_quarto.pdf) · [Word](reports/exploracion_quarto.docx) · [código fuente](reports/exploracion_quarto.qmd)
+Anexos: [informe borrador](https://palp311.github.io/Trigo-estres-termico/reports/informe_borrador.html) ([código](reports/informe_borrador.qmd)) · exploración de Quarto en [HTML](https://palp311.github.io/Trigo-estres-termico/reports/exploracion_quarto.html), [PDF](reports/exploracion_quarto.pdf) y [Word](reports/exploracion_quarto.docx) ([código](reports/exploracion_quarto.qmd))
 
 ## Preguntas exploratorias
 
@@ -79,6 +79,8 @@ El texto y los datos simulados de este repositorio se publican bajo la licencia 
 ```text
 Trigo-estres-termico/
 ├── Trigo-estres-termico.Rproj
+├── index.qmd                  # Informe final (portada del sitio)
+├── referencias_literatura.bib # Bibliografía del informe final
 ├── _quarto.yml                # Proyecto Quarto (qué se renderiza)
 ├── renv.lock                  # Versiones de paquetes fijadas
 ├── renv/                      # Infraestructura de renv (la biblioteca no se versiona)
