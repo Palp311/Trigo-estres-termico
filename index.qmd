@@ -231,6 +231,21 @@ kable(tabla_kp, align = "lrr")
 
 En promedio, el potasio cambia un `r fmt(cambio_k)` % y la prolina un `r fmt(cambio_pro)` % bajo calor. La prolina es un compuesto protector que la planta produce ante el estrés, así que su aumento es coherente con plantas bajo presión. La relación entre potasio y fotosíntesis es moderada y en buena parte refleja diferencias entre genotipos: no permite afirmar que el potasio *cause* una mayor fotosíntesis.
 
+## Vista general: las tres capas a la vez
+
+```{r}
+#| label: fig-mapa-calor
+#| fig-cap: "Cambio porcentual de la media bajo calor frente a control, por genotipo y variable, agrupado por capa (fisiología, ionómica y metabolómica). Azul = disminuye, naranja = aumenta; n = 4 por celda. Fuente: datos simulados (este repositorio)."
+#| out-width: "100%"
+cambio_gen <- read_csv(here("reports", "eda_cambio_genotipo.csv"), show_col_types = FALSE)
+vc <- function(v, g) cambio_gen$percent_change[cambio_gen$variable == v & cambio_gen$genotipo == g]
+knitr::include_graphics(here("figures", "eda_mapa_calor_cambio.png"))
+```
+
+El mapa resume `r n_distinct(cambio_gen$variable)` variables de las tres capas. La mayoría de las variables de fisiología cae con el calor en todos los genotipos (por ejemplo, la conductancia estomática baja entre `r fmt(abs(max(cambio_gen$percent_change[cambio_gen$variable == "gs"])), 0)` % y `r fmt(abs(min(cambio_gen$percent_change[cambio_gen$variable == "gs"])), 0)` %), mientras que sodio y calcio suben. En metabolómica, la rafinosa y la prolina aumentan en los cinco genotipos; la rafinosa llega a +`r fmt(vc("Rafinosa", "G2"), 0)` % en G2.
+
+Las caídas de fotosíntesis, potasio y clorofila (SPAD) son más moderadas en G1 y G3 (por ejemplo, SPAD `r fmt(vc("SPAD", "G1"), 0)` % y `r fmt(vc("SPAD", "G3"), 0)` %) que en G2, G4 y G5 (`r fmt(vc("SPAD", "G2"), 0)` %, `r fmt(vc("SPAD", "G4"), 0)` % y `r fmt(vc("SPAD", "G5"), 0)` %). Es una vista de apoyo a los tres hallazgos anteriores, no un cuarto resultado.
+
 ## ¿Qué significa?
 
 - El calor reduce de forma clara la fotosíntesis neta (`r fmt(cambio_anet)` %) y acompaña cambios en el potasio (`r fmt(cambio_k)` %) y la prolina (+`r fmt(cambio_pro)` %).
@@ -250,6 +265,7 @@ Todo el análisis es reproducible y está en el repositorio [Trigo-estres-termic
 
 - Limpieza, validación e integración de las tres capas de datos: [`scripts/01_eda.R`](https://github.com/Palp311/Trigo-estres-termico/blob/main/scripts/01_eda.R).
 - Descripción de cada variable: [`data/diccionario_datos.csv`](https://github.com/Palp311/Trigo-estres-termico/blob/main/data/diccionario_datos.csv).
+- Validación de los datos contra el diccionario: [`reports/validacion.md`](https://github.com/Palp311/Trigo-estres-termico/blob/main/reports/validacion.md).
 - Versiones de paquetes: [`renv.lock`](https://github.com/Palp311/Trigo-estres-termico/blob/main/renv.lock).
 - Anexos: [informe borrador](reports/informe_borrador.html) y [exploración de Quarto](reports/exploracion_quarto.html).
 

@@ -59,6 +59,69 @@ verificar_alineacion <- function(referencia, candidata, nombre_capa) {
 verificar_alineacion(fisiologia, ionomica, "ionómica")
 verificar_alineacion(fisiologia, metabolomica, "metabolómica")
 
+# ---- Validación contra el diccionario de datos --------------------------------
+diccionario <- read_csv(here("data", "diccionario_datos.csv"), show_col_types = FALSE)
+
+# Valida las variables de una capa contra el diccionario. Los problemas
+# estructurales (columnas sin documentar o ausentes) detienen el script; los
+# valores fuera de rango o de niveles solo se reportan (estado "REVISAR").
+validar_capa <- function(datos, diccionario, capa, variables, nombre_capa = capa) {
+  dic <- filter(diccionario, capa == !!capa)
+  sin_documentar <- setdiff(variables, dic$variable)
+  if (length(sin_documentar) > 0) {
+    stop("Columnas sin documentar en el diccionario (", nombre_capa, "): ",
+         paste(sin_documentar, collapse = ", "))
+  }
+  ausentes <- setdiff(dic$variable, names(datos))
+  if (length(ausentes) > 0) {
+    stop("Variables del diccionario ausentes en los datos (", nombre_capa, "): ",
+         paste(ausentes, collapse = ", "))
+  }
+  filas <- lapply(dic$variable, function(v) {
+    d <- filter(dic, variable == v)
+    x <- datos[[v]]
+    n_na <- sum(is.na(x))
+    if (d$tipo == "numerico") {
+      tipo_ok <- is.numeric(x)
+      limites <- as.numeric(strsplit(d$valores_o_rango_esperado, " a ", fixed = TRUE)[[1]])
+      fuera <- if (tipo_ok) sum(x < limites[1] | x > limites[2], na.rm = TRUE) else NA_integer_
+      minimo <- if (tipo_ok && n_na < length(x)) min(x, na.rm = TRUE) else NA_real_
+      maximo <- if (tipo_ok && n_na < length(x)) max(x, na.rm = TRUE) else NA_real_
+    } else {
+      tipo_ok <- is.character(x) || is.factor(x)
+      minimo <- NA_real_
+      maximo <- NA_real_
+      if (v == "sample_id") {
+        fuera <- sum(duplicated(x))
+      } else {
+        niveles <- trimws(strsplit(d$valores_o_rango_esperado, ";", fixed = TRUE)[[1]])
+        fuera <- sum(!x[!is.na(x)] %in% niveles)
+      }
+    }
+    tibble(
+      variable = v, capa = capa, unidad = d$unidad, n = length(x), n_NA = n_na,
+      min = minimo, max = maximo, rango_esperado = d$valores_o_rango_esperado,
+      fuera_de_rango = fuera, tipo_correcto = tipo_ok
+    )
+  })
+  bind_rows(filas) %>%
+    mutate(estado = if_else(tipo_correcto & n_NA == 0 & fuera_de_rango == 0,
+                            "OK", "REVISAR"))
+}
+
+validacion <- bind_rows(
+  validar_capa(fisiologia, diccionario, "metadatos", metadatos, "metadatos"),
+  validar_capa(fisiologia, diccionario, "fisiologia",
+               setdiff(names(fisiologia), metadatos)),
+  validar_capa(ionomica, diccionario, "ionomica",
+               setdiff(names(ionomica), metadatos)),
+  validar_capa(metabolomica, diccionario, "metabolomica",
+               setdiff(names(metabolomica), metadatos))
+)
+# sample_id repetido en cualquiera de las tres capas
+duplicados_sample_id <- sum(duplicated(fisiologia$sample_id)) +
+  sum(duplicated(ionomica$sample_id)) + sum(duplicated(metabolomica$sample_id))
+
 # Integración por sample_id (relación uno a uno)
 integrado <- fisiologia %>%
   left_join(select(ionomica, -all_of(metadatos[-1])),
@@ -77,6 +140,38 @@ if (length(columnas_no_numericas) > 0) {
 dir.create(dir_salida, recursive = TRUE, showWarnings = FALSE)
 dir.create(dir_figuras, recursive = TRUE, showWarnings = FALSE)
 dir.create(dir_reportes, recursive = TRUE, showWarnings = FALSE)
+
+# Informe de validación en Markdown
+fmt_num <- function(x) ifelse(is.na(x), "-", format(x, trim = TRUE, drop0trailing = TRUE))
+n_revisar <- sum(validacion$estado == "REVISAR")
+tabla_md <- validacion %>%
+  mutate(across(c(min, max), fmt_num)) %>%
+  transmute(
+    linea = paste0("| ", variable, " | ", capa, " | ", unidad, " | ", n, " | ", n_NA,
+                   " | ", min, " | ", max, " | ", rango_esperado, " | ",
+                   fuera_de_rango, " | ", estado, " |")
+  )
+writeLines(c(
+  "# Validación de datos contra el diccionario",
+  "",
+  paste0("Fecha de ejecución: ", format(Sys.Date(), "%Y-%m-%d")),
+  "",
+  "Datos simulados. Referencia: `data/diccionario_datos.csv`.",
+  "",
+  paste0("- Variables validadas: ", nrow(validacion)),
+  paste0("- Variables con estado REVISAR: ", n_revisar),
+  paste0("- Valores faltantes en total: ", sum(validacion$n_NA)),
+  paste0("- Valores fuera de rango o de niveles esperados: ",
+         sum(validacion$fuera_de_rango, na.rm = TRUE)),
+  paste0("- `sample_id` repetidos (suma de las tres capas): ", duplicados_sample_id),
+  paste0("- Estado general: ", if (n_revisar == 0) "OK" else "REVISAR"),
+  "",
+  "Para variables de tipo factor, `fuera_de_rango` cuenta valores fuera de los niveles esperados; para `sample_id`, cuenta duplicados.",
+  "",
+  "| variable | capa | unidad | n | n_NA | min | max | rango esperado | fuera_de_rango | estado |",
+  "|---|---|---|---|---|---|---|---|---|---|",
+  tabla_md$linea
+), file.path(dir_reportes, "validacion.md"), useBytes = FALSE)
 write_csv(integrado, file.path(dir_salida, "dataset_integrado_simulado.csv"), na = "NA")
 
 capas_variables <- data.frame(
@@ -244,11 +339,54 @@ grafico_relacion <- ggplot(
   theme(legend.position = "bottom", panel.grid.minor = element_blank(),
         plot.title = element_text(face = "bold"))
 
+
+# Cambio porcentual Calor vs Control por genotipo y variable (mapa de calor)
+orden_capas <- c("Fisiología", "Ionómica", "Metabolómica")
+cambio_genotipo <- datos_largos %>%
+  group_by(layer, variable, genotipo, tratamiento) %>%
+  summarise(mean = mean(value, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = tratamiento, values_from = mean) %>%
+  mutate(percent_change = if_else(Control == 0, NA_real_,
+                                  100 * (Calor - Control) / Control)) %>%
+  mutate(across(c(Control, Calor), ~ round(.x, 2)),
+         percent_change = round(percent_change, 1)) %>%
+  arrange(factor(layer, levels = orden_capas),
+          match(variable, columnas_medicion), genotipo)
+write_csv(cambio_genotipo, file.path(dir_reportes, "eda_cambio_genotipo.csv"), na = "NA")
+
+datos_mapa <- cambio_genotipo %>%
+  mutate(layer = factor(layer, levels = orden_capas),
+         variable = factor(variable, levels = rev(columnas_medicion)))
+limite_color <- max(abs(datos_mapa$percent_change), na.rm = TRUE)
+grafico_mapa <- ggplot(datos_mapa, aes(x = genotipo, y = variable, fill = percent_change)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(percent_change, 0)), size = 3) +
+  facet_grid(layer ~ ., scales = "free_y", space = "free") +
+  scale_fill_gradient2(
+    low = "#0072B2", mid = "white", high = "#D55E00", midpoint = 0,
+    limits = c(-limite_color, limite_color), name = "Cambio (%)"
+  ) +
+  labs(
+    title = "El calor afecta más a G2, G4 y G5; rafinosa y prolina suben en todos los genotipos",
+    subtitle = "Cambio porcentual de la media bajo calor frente a control, por genotipo y variable",
+    x = "Genotipo", y = NULL,
+    caption = "Fuente: datos simulados (este repositorio). n = 4 por celda; azul = disminuye, naranja = aumenta."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), legend.position = "right",
+        plot.title = element_text(face = "bold", size = 11),
+        plot.title.position = "plot",
+        strip.text.y = element_text(angle = 0, face = "bold"))
+alto_mapa <- 2 + 0.3 * length(columnas_medicion)
+
 ggsave(file.path(dir_figuras, "eda_multicapa.pdf"), grafico_distribucion,
        width = 11, height = 4.8, units = "in", device = grDevices::pdf,
        timestamp = FALSE)
 ggsave(file.path(dir_figuras, "eda_relacion_capas.pdf"), grafico_relacion,
        width = 8, height = 4.8, units = "in", device = grDevices::pdf,
+       timestamp = FALSE)
+ggsave(file.path(dir_figuras, "eda_mapa_calor_cambio.pdf"), grafico_mapa,
+       width = 8, height = alto_mapa, units = "in", device = grDevices::pdf,
        timestamp = FALSE)
 
 # Copias PNG para mostrarlas en el README (GitHub no muestra PDF inline)
@@ -256,4 +394,7 @@ ggsave(file.path(dir_figuras, "eda_multicapa.png"), grafico_distribucion,
        width = 11, height = 4.8, units = "in", dpi = 200)
 ggsave(file.path(dir_figuras, "eda_relacion_capas.png"), grafico_relacion,
        width = 8, height = 4.8, units = "in", dpi = 200)
+ggsave(file.path(dir_figuras, "eda_mapa_calor_cambio.png"), grafico_mapa,
+       width = 8, height = alto_mapa, units = "in", dpi = 300)
+cat("Validación escrita en reports/validacion.md:", n_revisar, "variables en REVISAR\n")
 cat("Figuras guardadas en figures/ (PDF y PNG)\n")

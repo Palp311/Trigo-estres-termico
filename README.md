@@ -50,6 +50,11 @@ Versiones usadas (fijadas en `renv.lock`): R 4.6.1, Quarto 1.5.57, dplyr 1.2.1, 
 
 El análisis es descriptivo: resúmenes por tratamiento y genotipo, cambio porcentual frente a control y correlaciones de Spearman dentro de cada tratamiento. La interpretación está en `reports/eda_detallado.md`.
 
+- **Validación:** `scripts/01_eda.R` comprueba cada variable contra `data/diccionario_datos.csv` (existencia, tipo, NA, duplicados de `sample_id`, niveles y rangos esperados) y escribe el resultado en [`reports/validacion.md`](reports/validacion.md). Los valores fuera de rango solo se reportan; los problemas estructurales detienen el script.
+- **Mapa de calor:** `figures/eda_mapa_calor_cambio.png` muestra el cambio porcentual Calor frente a Control por genotipo y variable (tabla en `reports/eda_cambio_genotipo.csv`).
+
+![Mapa de calor del cambio porcentual bajo calor por genotipo y variable](figures/eda_mapa_calor_cambio.png)
+
 ## Figuras
 
 ![Fotosíntesis neta, potasio y prolina por genotipo bajo control y calor](figures/eda_multicapa.png)
