@@ -4,7 +4,7 @@ subtitle: "Exploración libre de Quarto — datos simulados"
 author: "Paul López"
 date: today
 lang: es
-bibliography: referencias.bib
+bibliography: ../bib/referencias_paquetes.bib
 format:
   html:
     toc: true
@@ -62,7 +62,7 @@ cambio <- function(var) {
 fmt <- function(x, d = 1) format(round(x, d), decimal.mark = ",", nsmall = d)
 
 guardar <- function(grafico, nombre, ancho = 8, alto = 5) {
-  ggsave(here("figures", paste0("quarto_", nombre)), grafico,
+  ggsave(here("figures", "quarto", paste0("quarto_", nombre)), grafico,
          width = ancho, height = alto, dpi = 300)
 }
 
@@ -80,7 +80,7 @@ rho_k <- cor(calor$A_net, calor$K_mg_g, method = "spearman")
 #| include: false
 # la bibliografía se genera desde los paquetes instalados, no a mano
 knitr::write_bib(c("emmeans", "multcomp", "ggplot2", "dplyr"),
-                 file = here("reports", "referencias.bib"))
+                 file = here("bib", "referencias_paquetes.bib"))
 ```
 
 ::: {.callout-warning}

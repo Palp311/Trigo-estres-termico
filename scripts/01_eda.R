@@ -17,8 +17,11 @@ suppressPackageStartupMessages({
 # Rutas y metadatos comunes a las tres capas
 dir_datos <- here("data", "raw")
 dir_salida <- here("data", "processed")
-dir_figuras <- here("figures")
+dir_figuras <- here("figures", "eda")
 dir_reportes <- here("reports")
+dir_tablas <- here("tables")
+dir.create(dir_figuras, recursive = TRUE, showWarnings = FALSE)
+dir.create(dir_tablas, recursive = TRUE, showWarnings = FALSE)
 metadatos <- c("sample_id", "bloque", "tratamiento", "genotipo")
 
 # Lee una capa y valida lectura, metadatos y unicidad de sample_id
@@ -255,12 +258,12 @@ correlaciones <- integrado %>%
     .groups = "drop"
   )
 
-write_csv(conteo_diseno, file.path(dir_reportes, "eda_diseno.csv"))
-write_csv(resumen_faltantes, file.path(dir_reportes, "eda_faltantes.csv"))
-write_csv(resumen_tratamiento, file.path(dir_reportes, "eda_resumen_tratamiento.csv"), na = "NA")
-write_csv(resumen_genotipo, file.path(dir_reportes, "eda_resumen_genotipo.csv"), na = "NA")
-write_csv(cambio_relativo, file.path(dir_reportes, "eda_cambios_relativos.csv"), na = "NA")
-write_csv(correlaciones, file.path(dir_reportes, "eda_correlaciones.csv"), na = "NA")
+write_csv(conteo_diseno, file.path(dir_tablas, "eda_diseno.csv"))
+write_csv(resumen_faltantes, file.path(dir_tablas, "eda_faltantes.csv"))
+write_csv(resumen_tratamiento, file.path(dir_tablas, "eda_resumen_tratamiento.csv"), na = "NA")
+write_csv(resumen_genotipo, file.path(dir_tablas, "eda_resumen_genotipo.csv"), na = "NA")
+write_csv(cambio_relativo, file.path(dir_tablas, "eda_cambios_relativos.csv"), na = "NA")
+write_csv(correlaciones, file.path(dir_tablas, "eda_correlaciones.csv"), na = "NA")
 
 cat("DATOS SIMULADOS: solo EDA descriptivo\n")
 cat("Datos integrados:", nrow(integrado), "muestras,", ncol(integrado),
@@ -352,7 +355,7 @@ cambio_genotipo <- datos_largos %>%
          percent_change = round(percent_change, 1)) %>%
   arrange(factor(layer, levels = orden_capas),
           match(variable, columnas_medicion), genotipo)
-write_csv(cambio_genotipo, file.path(dir_reportes, "eda_cambio_genotipo.csv"), na = "NA")
+write_csv(cambio_genotipo, file.path(dir_tablas, "eda_cambio_genotipo.csv"), na = "NA")
 
 datos_mapa <- cambio_genotipo %>%
   mutate(layer = factor(layer, levels = orden_capas),
@@ -397,4 +400,4 @@ ggsave(file.path(dir_figuras, "eda_relacion_capas.png"), grafico_relacion,
 ggsave(file.path(dir_figuras, "eda_mapa_calor_cambio.png"), grafico_mapa,
        width = 8, height = alto_mapa, units = "in", dpi = 300)
 cat("Validación escrita en reports/validacion.md:", n_revisar, "variables en REVISAR\n")
-cat("Figuras guardadas en figures/ (PDF y PNG)\n")
+cat("Figuras guardadas en figures/eda/ (PDF y PNG)\n")

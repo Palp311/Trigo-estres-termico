@@ -32,7 +32,7 @@ Anexos: [informe borrador](https://palp311.github.io/Trigo-estres-termico/report
    renv::restore()
    ```
 
-2. Ejecuta el análisis desde la consola de R (valida y integra las tres tablas en `data/processed/`, guarda los resúmenes en `reports/eda_*.csv` y las figuras en `figures/`):
+2. Ejecuta el análisis desde la consola de R (valida y integra las tres tablas en `data/processed/`, guarda los resúmenes en `tables/eda_*.csv` y las figuras en `figures/eda/`):
 
    ```r
    source("scripts/01_eda.R")
@@ -51,17 +51,17 @@ Versiones usadas (fijadas en `renv.lock`): R 4.6.1, Quarto 1.5.57, dplyr 1.2.1, 
 El análisis es descriptivo: resúmenes por tratamiento y genotipo, cambio porcentual frente a control y correlaciones de Spearman dentro de cada tratamiento. La interpretación está en `reports/eda_detallado.md`.
 
 - **Validación:** `scripts/01_eda.R` comprueba cada variable contra `data/diccionario_datos.csv` (existencia, tipo, NA, duplicados de `sample_id`, niveles y rangos esperados) y escribe el resultado en [`reports/validacion.md`](reports/validacion.md). Los valores fuera de rango solo se reportan; los problemas estructurales detienen el script.
-- **Mapa de calor:** `figures/eda_mapa_calor_cambio.png` muestra el cambio porcentual Calor frente a Control por genotipo y variable (tabla en `reports/eda_cambio_genotipo.csv`).
+- **Mapa de calor:** `figures/eda/eda_mapa_calor_cambio.png` muestra el cambio porcentual Calor frente a Control por genotipo y variable (tabla en `tables/eda_cambio_genotipo.csv`).
 
-![Mapa de calor del cambio porcentual bajo calor por genotipo y variable](figures/eda_mapa_calor_cambio.png)
+![Mapa de calor del cambio porcentual bajo calor por genotipo y variable](figures/eda/eda_mapa_calor_cambio.png)
 
 ## Figuras
 
-![Fotosíntesis neta, potasio y prolina por genotipo bajo control y calor](figures/eda_multicapa.png)
+![Fotosíntesis neta, potasio y prolina por genotipo bajo control y calor](figures/eda/eda_multicapa.png)
 
 *Bajo calor cae la fotosíntesis neta y el potasio, y sube la prolina; G1 y G3 sostienen mejor la fotosíntesis. n = 4 muestras por genotipo y tratamiento (datos simulados).*
 
-![Relación entre fotosíntesis neta y prolina, por tratamiento](figures/eda_relacion_capas.png)
+![Relación entre fotosíntesis neta y prolina, por tratamiento](figures/eda/eda_relacion_capas.png)
 
 *Relación exploratoria entre fisiología y metabolómica dentro de cada tratamiento (n = 20 por panel; la asociación no implica causalidad).*
 
@@ -85,7 +85,6 @@ El texto y los datos simulados de este repositorio se publican bajo la licencia 
 Trigo-estres-termico/
 ├── Trigo-estres-termico.Rproj
 ├── index.qmd                  # Informe final (portada del sitio)
-├── referencias_literatura.bib # Bibliografía del informe final
 ├── _quarto.yml                # Proyecto Quarto (qué se renderiza)
 ├── renv.lock                  # Versiones de paquetes fijadas
 ├── renv/                      # Infraestructura de renv (la biblioteca no se versiona)
@@ -94,8 +93,15 @@ Trigo-estres-termico/
 │   ├── raw/                   # Datos simulados originales (no se modifican)
 │   ├── processed/             # Tablas generadas por el script
 │   └── diccionario_datos.csv  # Diccionario de variables
-├── figures/                   # Figuras del EDA
-├── reports/                   # Informes (.qmd), resúmenes eda_*.csv e interpretación
+├── bib/
+│   ├── referencias_literatura.bib # Bibliografía del informe final
+│   └── referencias_paquetes.bib   # Citas de paquetes (generada con knitr::write_bib())
+├── tables/                    # Resúmenes del EDA (eda_*.csv)
+├── figures/
+│   ├── eda/                   # Figuras del script de EDA (PNG y PDF)
+│   ├── final/                 # Figuras del informe final
+│   └── quarto/                # Figuras de la exploración de Quarto
+├── reports/                   # Informes (.qmd), interpretación y validación
 │   └── actividades/           # Actividades semanales del curso
 └── scripts/                   # Código en R
 ```

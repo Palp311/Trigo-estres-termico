@@ -10,7 +10,7 @@ Repositorio público: [Palp311/Proyecto_final_trigo](https://github.com/Palp311/
 
 ## 3. EDA
 
-Ejecuté `Rscript scripts/01_eda.R`. La tabla integrada tiene 40 muestras y 28 columnas, con 23 mediciones numéricas; no contiene NA. El diseño tiene cuatro muestras por cada combinación de cinco genotipos y dos tratamientos. En calor, la media simulada de fotosíntesis neta fue 12,59 frente a 22,12 en control (−43,1 %); la de potasio fue 30,37 frente a 38,52 (−21,2 %); y la de prolina, 64,69 frente a 41,04 (+57,6 %). Las [distribuciones por genotipo](../figures/eda_multicapa.pdf) y la [relación entre fotosíntesis y prolina](../figures/eda_relacion_capas.pdf) complementan los [resúmenes tabulares](eda_detallado.md). Son patrones programados en datos simulados, sin valor como resultados científicos.
+Ejecuté `Rscript scripts/01_eda.R`. La tabla integrada tiene 40 muestras y 28 columnas, con 23 mediciones numéricas; no contiene NA. El diseño tiene cuatro muestras por cada combinación de cinco genotipos y dos tratamientos. En calor, la media simulada de fotosíntesis neta fue 12,59 frente a 22,12 en control (−43,1 %); la de potasio fue 30,37 frente a 38,52 (−21,2 %); y la de prolina, 64,69 frente a 41,04 (+57,6 %). Las [distribuciones por genotipo](../figures/eda/eda_multicapa.pdf) y la [relación entre fotosíntesis y prolina](../figures/eda/eda_relacion_capas.pdf) complementan los [resúmenes tabulares](eda_detallado.md). Son patrones programados en datos simulados, sin valor como resultados científicos.
 
 ## 4. Datos ausentes
 

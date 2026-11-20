@@ -4,7 +4,7 @@ subtitle: "Tres hallazgos de un análisis con datos simulados"
 author: "Paul López"
 date: today
 lang: es
-bibliography: referencias_literatura.bib
+bibliography: bib/referencias_literatura.bib
 format:
   html:
     theme: cosmo
@@ -51,7 +51,7 @@ tema <- theme_minimal(base_size = 13) +
 fmt <- function(x, d = 1) format(round(x, d), decimal.mark = ",", nsmall = d)
 cambio_pct <- function(calor, control) 100 * (calor - control) / control
 guardar <- function(grafico, nombre) {
-  ggsave(here("figures", paste0("final_", nombre)), grafico,
+  ggsave(here("figures", "final", paste0("final_", nombre)), grafico,
          width = 8, height = 5, dpi = 300)
 }
 etiqueta_anet <- expression(A[net]~(mu*mol~CO[2]~m^-2~s^-1))
@@ -237,9 +237,9 @@ En promedio, el potasio cambia un `r fmt(cambio_k)` % y la prolina un `r fmt(cam
 #| label: fig-mapa-calor
 #| fig-cap: "Cambio porcentual de la media bajo calor frente a control, por genotipo y variable, agrupado por capa (fisiología, ionómica y metabolómica). Azul = disminuye, naranja = aumenta; n = 4 por celda. Fuente: datos simulados (este repositorio)."
 #| out-width: "100%"
-cambio_gen <- read_csv(here("reports", "eda_cambio_genotipo.csv"), show_col_types = FALSE)
+cambio_gen <- read_csv(here("tables", "eda_cambio_genotipo.csv"), show_col_types = FALSE)
 vc <- function(v, g) cambio_gen$percent_change[cambio_gen$variable == v & cambio_gen$genotipo == g]
-knitr::include_graphics(here("figures", "eda_mapa_calor_cambio.png"))
+knitr::include_graphics(here("figures", "eda", "eda_mapa_calor_cambio.png"))
 ```
 
 El mapa resume `r n_distinct(cambio_gen$variable)` variables de las tres capas. La mayoría de las variables de fisiología cae con el calor en todos los genotipos (por ejemplo, la conductancia estomática baja entre `r fmt(abs(max(cambio_gen$percent_change[cambio_gen$variable == "gs"])), 0)` % y `r fmt(abs(min(cambio_gen$percent_change[cambio_gen$variable == "gs"])), 0)` %), mientras que sodio y calcio suben. En metabolómica, la rafinosa y la prolina aumentan en los cinco genotipos; la rafinosa llega a +`r fmt(vc("Rafinosa", "G2"), 0)` % en G2.
