@@ -200,7 +200,7 @@ kable(tabla_gen, align = "lrrrc")
 
 Bajo calor, G1 y G3 conservan entre `r fmt(min(a_dest))` y `r fmt(max(a_dest))` µmol CO~2~ m⁻² s⁻¹, mientras que el resto queda entre `r fmt(min(a_resto))` y `r fmt(max(a_resto))`. Las letras de la tabla indican qué genotipos se distinguen estadísticamente bajo calor. Con solo cuatro plantas por combinación, los intervalos son amplios y conviene leerlo como una pista, no como una prueba definitiva.
 
-## Hallazgo 3: bajo calor, más potasio acompaña a más fotosíntesis (ρ = `r fmt(rho_k, 2)`), y la prolina sube un `r fmt(cambio_pro, 0)` %
+## Hallazgo 3: bajo calor, los genotipos con más potasio mantienen más fotosíntesis (ρ = `r fmt(rho_k, 2)`), y la prolina sube un `r fmt(cambio_pro, 0)` %
 
 ```{r}
 #| label: fig-potasio
@@ -211,7 +211,7 @@ g3 <- ggplot(calor, aes(K_mg_g, A_net)) +
   scale_color_manual(values = colores_gen) +
   annotate("label", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3,
            label = paste0("Spearman ρ = ", fmt(rho_k, 2), " (n = ", nrow(calor), ")")) +
-  labs(title = "Con más potasio, más fotosíntesis bajo calor",
+  labs(title = "Bajo calor, los genotipos con más potasio mantienen más fotosíntesis",
        x = expression(Potasio~en~hoja~(mg~g^-1)),
        y = etiqueta_anet, color = "Genotipo", caption = fuente) +
   tema

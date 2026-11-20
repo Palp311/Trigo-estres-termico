@@ -1,6 +1,6 @@
 # Validación de datos contra el diccionario
 
-Fecha de ejecución: 2026-11-15
+Fecha de ejecución: 2026-11-20
 
 Datos simulados. Referencia: `data/diccionario_datos.csv`.
 
